@@ -1,0 +1,12 @@
+# VSCode
+.history/
+
+# Ren'Py
+errors.txt
+log.txt
+persistent
+traceback.txt
+*.rpa
+*.rpy[bc]
+*.rpymc
+**/saves/*
