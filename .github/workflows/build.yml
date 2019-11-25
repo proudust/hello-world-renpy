@@ -1,0 +1,36 @@
+name: Build by Ren'Py 6.99.12.4
+
+on: [push]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v1
+
+      - name: Inject version
+        run: |
+          version=$(git describe --tags)
+          sed -i "s/config.version = \".*\"/config.version = \"${version}\"/" game/options.rpy
+
+      - name: Build by Ren'Py 6.99.12.4
+        id: build
+        uses: ProjectAliceDev/renpy-build-action@v1.1.0
+        with:
+          sdk-version: "6.99.12.4"
+          project-dir: "."
+        env:
+          SDL_AUDIODRIVER: dummy
+          SDL_VIDEODRIVER: dummy
+
+      - name: Repackage
+        run: |
+          unzip -q $(ls -d ${{ steps.build.outputs.dir }}/*-win.zip) -d temp
+          mv temp/$(ls temp | head -n1)/ artifacts/
+
+      - name: Upload build artifact
+        uses: actions/upload-artifact@v1
+        with:
+          name: ${{ env.FOLDER_NAME }}_${{ env.PATCH_VERSION }}
+          path: artifacts
