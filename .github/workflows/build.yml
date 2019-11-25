@@ -2,6 +2,11 @@ name: Build by Ren'Py 6.99.12.4
 
 on: [push]
 
+env:
+  FOLDER_NAME: "HelloWorld"
+  # PATCH_VERSION: $(git describe --tags)
+  BASE_VERSION: "v1.1.1"
+
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -9,10 +14,11 @@ jobs:
     steps:
       - uses: actions/checkout@v1
 
-      - name: Inject version
-        run: |
-          version=$(git describe --tags)
-          sed -i "s/config.version = \".*\"/config.version = \"${version}\"/" game/options.rpy
+      - name: Get Git describe version and set to env
+        run: echo ::set-env name=PATCH_VERSION::$(git describe --tags)
+
+      - name: Inject Git describe version
+        run: sed -i "s/config.version = \".*\"/config.version = \"${{ env.PATCH_VERSION }}\"/" game/options.rpy
 
       - name: Build by Ren'Py 6.99.12.4
         id: build
@@ -34,3 +40,29 @@ jobs:
         with:
           name: ${{ env.FOLDER_NAME }}_${{ env.PATCH_VERSION }}
           path: artifacts
+
+      - name: Release preparation
+        if: startsWith(github.ref, 'refs/tags/')
+        run: zip -q -r ${{ env.FOLDER_NAME }}_${{ env.PATCH_VERSION }}.zip artifacts/
+
+      - name: Create Release
+        if: startsWith(github.ref, 'refs/tags/')
+        id: create_release
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: ${{ env.PATCH_VERSION }}
+          release_name: ver${{ env.PATCH_VERSION }} for ${{ env.BASE_VERSION }}
+          draft: true
+
+      - name: Upload Release Asset
+        if: startsWith(github.ref, 'refs/tags/')
+        uses: actions/upload-release-asset@v1.0.1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: ./${{ env.FOLDER_NAME }}_${{ env.PATCH_VERSION }}.zip
+          asset_name: ${{ env.FOLDER_NAME }}_${{ env.PATCH_VERSION }}.zip
+          asset_content_type: application/zip
