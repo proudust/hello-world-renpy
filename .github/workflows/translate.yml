@@ -1,6 +1,7 @@
 name: Update translate files
 
 on:
+  deployment:
   push:
     branches:
       - "*"
