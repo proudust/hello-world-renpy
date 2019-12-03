@@ -20,6 +20,8 @@ jobs:
       - name: Inject Git describe version
         run: sed -i "s/config.version = \".*\"/config.version = \"${{ env.PATCH_VERSION }}\"/" game/options.rpy
 
+      - run: pwd
+
       - name: Build by Ren'Py 6.99.12.4
         id: build
         uses: ProjectAliceDev/renpy-build-action@v1.1.0
