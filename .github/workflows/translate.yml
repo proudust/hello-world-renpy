@@ -1,12 +1,8 @@
 name: Update translate files
 
 on:
-  push:
-    branches:
-      - "*"
   repository_dispatch:
-  schedule:
-    - cron: "21 0 * * *"
+    types: [update_translate]
 
 jobs:
   translate:
